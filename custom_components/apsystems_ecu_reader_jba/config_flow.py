@@ -4,7 +4,13 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from .const import DOMAIN, KEYS, CLOUD_KEYS
+from .const import (
+    DOMAIN,
+    KEYS,
+    CLOUD_KEYS,
+    DEFAULT_CLOUD_INTERVAL,
+    MIN_CLOUD_INTERVAL,
+)
 from .ecu_api import APsystemsSocket, APsystemsInvalidData
 from .cloud_api import APsystemsCloudAPI, APsystemsCloudError
 
@@ -12,16 +18,48 @@ from .cloud_api import APsystemsCloudAPI, APsystemsCloudError
 _LOGGER = logging.getLogger(__name__)
 
 """Set defaults for the configuration."""
-ECU_HOST = ""
-SCAN_INTERVAL = 300
-PORT_RETRIES = 5
-CACHE_REBOOT = 3
-SHOW_GRAPHS = True
-WIFI_SSID = "ECU-WIFI_local"
-WIFI_PASSWORD = "default"
-CLOUD_APP_ID = ""
-CLOUD_APP_SECRET = ""
-CLOUD_SID = ""
+DEFAULTS = {
+    KEYS[0]: "",  # ecu_host
+    KEYS[1]: 300,  # scan_interval
+    KEYS[2]: 5,  # port_retries
+    KEYS[3]: 3,  # cache_reboot
+    KEYS[4]: True,  # show_graphs
+    KEYS[5]: "ECU-WIFI_local",  # wifi_ssid
+    KEYS[6]: "default",  # wifi_password
+    KEYS[7]: "",  # cloud_app_id
+    KEYS[8]: "",  # cloud_app_secret
+    KEYS[9]: "",  # cloud_sid
+    KEYS[10]: DEFAULT_CLOUD_INTERVAL,  # cloud_interval (minutes)
+}
+
+
+def build_schema(values):
+    """Build the form schema, prefilled with the given values."""
+
+    def default(key):
+        return values.get(key, DEFAULTS[key])
+
+    return vol.Schema(
+        {
+            vol.Required(KEYS[0], default=default(KEYS[0])): str,
+            vol.Required(KEYS[1], default=default(KEYS[1])): int,
+            vol.Required(KEYS[2], default=default(KEYS[2])): vol.All(
+                int, vol.Range(min=1, max=10)
+            ),
+            vol.Required(KEYS[3], default=default(KEYS[3])): vol.All(
+                int, vol.Range(min=3, max=5)
+            ),
+            vol.Optional(KEYS[4], default=default(KEYS[4])): bool,
+            vol.Optional(KEYS[5], default=default(KEYS[5])): str,
+            vol.Optional(KEYS[6], default=default(KEYS[6])): str,
+            vol.Optional(KEYS[7], default=default(KEYS[7])): str,
+            vol.Optional(KEYS[8], default=default(KEYS[8])): str,
+            vol.Optional(KEYS[9], default=default(KEYS[9])): str,
+            vol.Optional(KEYS[10], default=default(KEYS[10])): vol.All(
+                int, vol.Range(min=MIN_CLOUD_INTERVAL, max=1440)
+            ),
+        }
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -32,29 +70,12 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         errors = {}
-        init_schema = vol.Schema(
-            {
-                vol.Required(KEYS[0], default=ECU_HOST): str,
-                vol.Required(KEYS[1], default=SCAN_INTERVAL): int,
-                vol.Required(KEYS[2], default=PORT_RETRIES): vol.All(
-                    int, vol.Range(min=1, max=10)
-                ),
-                vol.Required(KEYS[3], default=CACHE_REBOOT): vol.All(
-                    int, vol.Range(min=3, max=5)
-                ),
-                vol.Optional(KEYS[4], default=SHOW_GRAPHS): bool,
-                vol.Optional(KEYS[5], default=WIFI_SSID): str,
-                vol.Optional(KEYS[6], default=WIFI_PASSWORD): str,
-                vol.Optional(KEYS[7], default=CLOUD_APP_ID): str,
-                vol.Optional(KEYS[8], default=CLOUD_APP_SECRET): str,
-                vol.Optional(KEYS[9], default=CLOUD_SID): str,
-            }
-        )
+        placeholders = {"error": ""}
 
         if user_input:
             cloud_error = await test_cloud_connection(user_input)
             if cloud_error:
-                errors[cloud_error[0]] = cloud_error[1]
+                field, errors[field], placeholders["error"] = cloud_error
             elif ecu_id := await test_ecu_connection(user_input):
                 await self.async_set_unique_id(ecu_id)
                 self._abort_if_unique_id_configured()
@@ -65,9 +86,12 @@ class FlowHandler(config_entries.ConfigFlow):
             else:
                 errors["ecu_host"] = "no_ecu_found"
 
-        # Show form because user input is empty.
+        # Show the form, keeping what the user typed when there is an error
         return self.async_show_form(
-            step_id="user", data_schema=init_schema, errors=errors
+            step_id="user",
+            data_schema=build_schema(user_input or {}),
+            errors=errors,
+            description_placeholders=placeholders,
         )
 
     @staticmethod
@@ -88,42 +112,29 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         errors = {}
-        # Get current options
-        _config = {**self.entry.data}
-        alter_schema = vol.Schema(
-            {
-                vol.Required(KEYS[0], default=_config.get(KEYS[0], ECU_HOST)): str,
-                vol.Required(KEYS[1], default=_config.get(KEYS[1], SCAN_INTERVAL)): int,
-                vol.Required(
-                    KEYS[2], default=_config.get(KEYS[2], PORT_RETRIES)
-                ): vol.All(int, vol.Range(min=1, max=10)),
-                vol.Required(
-                    KEYS[3], default=_config.get(KEYS[3], CACHE_REBOOT)
-                ): vol.All(int, vol.Range(min=3, max=5)),
-                vol.Optional(KEYS[4], default=_config.get(KEYS[4], SHOW_GRAPHS)): bool,
-                vol.Optional(KEYS[5], default=_config.get(KEYS[5], WIFI_SSID)): str,
-                vol.Optional(KEYS[6], default=_config.get(KEYS[6], WIFI_PASSWORD)): str,
-                vol.Optional(KEYS[7], default=_config.get(KEYS[7], CLOUD_APP_ID)): str,
-                vol.Optional(
-                    KEYS[8], default=_config.get(KEYS[8], CLOUD_APP_SECRET)
-                ): str,
-                vol.Optional(KEYS[9], default=_config.get(KEYS[9], CLOUD_SID)): str,
-            }
-        )
+        placeholders = {"error": ""}
 
         if user_input:
             cloud_error = await test_cloud_connection(user_input)
+            # Only test the ECU again when its address changed, the ECU is
+            # already being polled and a second query often fails.
+            host_changed = user_input[KEYS[0]] != self.entry.data.get(KEYS[0])
             if cloud_error:
-                errors[cloud_error[0]] = cloud_error[1]
-            elif ecu_id := await test_ecu_connection(user_input):
+                field, errors[field], placeholders["error"] = cloud_error
+            elif not host_changed or await test_ecu_connection(user_input):
                 self.hass.config_entries.async_update_entry(
                     self.entry, data={**self.entry.data, **user_input}
                 )
                 return self.async_create_entry(title="APsystems JBA", data={})
             else:
                 errors["ecu_host"] = "no_ecu_found"
+
+        # Show the form, keeping what the user typed when there is an error
         return self.async_show_form(
-            step_id="init", data_schema=alter_schema, errors=errors
+            step_id="init",
+            data_schema=build_schema(user_input or self.entry.data),
+            errors=errors,
+            description_placeholders=placeholders,
         )
 
 
@@ -143,7 +154,11 @@ async def test_ecu_connection(input_data):
 
 
 async def test_cloud_connection(input_data):
-    """Validate the optional OpenAPI settings, return (field, error) on failure."""
+    """Validate the optional OpenAPI settings.
+
+    Return (field, error key, detail) on failure, None when valid or unused.
+    This costs one OpenAPI call when the settings are filled in.
+    """
     for key in CLOUD_KEYS:
         input_data[key] = input_data.get(key, "").strip()
     values = [input_data[key] for key in CLOUD_KEYS]
@@ -151,10 +166,10 @@ async def test_cloud_connection(input_data):
         return None
     if not all(values):
         missing = next(key for key in CLOUD_KEYS if not input_data[key])
-        return missing, "cloud_incomplete"
+        return missing, "cloud_incomplete", ""
     try:
         await APsystemsCloudAPI(*values).get_meter_eid()
     except APsystemsCloudError as err:
         _LOGGER.warning("APsystems OpenAPI test failed: %s", err)
-        return KEYS[7], "cloud_connection_failed"
+        return KEYS[7], "cloud_connection_failed", str(err)
     return None

@@ -47,6 +47,8 @@ class APsystemsCloudAPI:
         self.sid = sid
         self.timeout = timeout
         self.eid = None
+        # Number of HTTP requests sent, the APsystems quota counts every call
+        self.calls = 0
 
     def _headers(self, path, method="GET"):
         """Build the signed headers (HmacSHA256) for a request."""
@@ -76,6 +78,7 @@ class APsystemsCloudAPI:
     async def _get(self, path):
         """Perform a signed GET request and return the 'data' part."""
         url = f"{CLOUD_BASE_URL}{path}"
+        self.calls += 1
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(

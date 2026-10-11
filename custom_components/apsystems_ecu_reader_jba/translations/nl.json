@@ -12,7 +12,8 @@
           "wifi_password": "Geef wachtwoord op (alleen voor ECU-R-Pro- en ECU-C-modellen)",
           "cloud_app_id": "APsystems OpenAPI App Id (optioneel, meterenergie uit de cloud)",
           "cloud_app_secret": "APsystems OpenAPI App Secret (optioneel)",
-          "cloud_sid": "APsystems EMA systeem-ID - SID (optioneel)"
+          "cloud_sid": "APsystems EMA systeem-ID - SID (optioneel, zichtbaar in de APsystems-app onder Account Details > Personal Info zodra OpenAPI actief is)",
+          "cloud_interval": "OpenAPI-query-interval in minuten (60 = ~744 aanroepen/maand, quotum meestal 1000)"
         },
         "title": "APsystems ECU Configuratie"
       }
@@ -21,7 +22,7 @@
       "no_ecu_found": "Geen ECU gevonden op dit IP-adres of de ECU is bezig te herstellen van een herstart",
       "unknown": "Onbekende fout, zie logboek voor details.",
       "cloud_incomplete": "Vul App Id, App Secret en systeem-ID in om de APsystems OpenAPI te gebruiken",
-      "cloud_connection_failed": "APsystems OpenAPI niet bereikbaar of geen meter gevonden, controleer App Id, App Secret en systeem-ID"
+      "cloud_connection_failed": "APsystems OpenAPI niet bereikbaar of geen meter gevonden: {error}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -40,7 +41,8 @@
           "wifi_password": "Geef wachtwoord op (alleen voor ECU-R-Pro- en ECU-C-modellen)",
           "cloud_app_id": "APsystems OpenAPI App Id (optioneel, meterenergie uit de cloud)",
           "cloud_app_secret": "APsystems OpenAPI App Secret (optioneel)",
-          "cloud_sid": "APsystems EMA systeem-ID - SID (optioneel)"
+          "cloud_sid": "APsystems EMA systeem-ID - SID (optioneel, zichtbaar in de APsystems-app onder Account Details > Personal Info zodra OpenAPI actief is)",
+          "cloud_interval": "OpenAPI-query-interval in minuten (60 = ~744 aanroepen/maand, quotum meestal 1000)"
         },
         "title": "APsystems ECU Configuratie"
       }
@@ -49,7 +51,7 @@
       "no_ecu_found": "Geen ECU gevonden op dit IP-adres of de ECU is bezig te herstellen van een herstart",
       "unknown": "Onbekende fout, zie logboek voor details",
       "cloud_incomplete": "Vul App Id, App Secret en systeem-ID in om de APsystems OpenAPI te gebruiken",
-      "cloud_connection_failed": "APsystems OpenAPI niet bereikbaar of geen meter gevonden, controleer App Id, App Secret en systeem-ID"
+      "cloud_connection_failed": "APsystems OpenAPI niet bereikbaar of geen meter gevonden: {error}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
