@@ -4,8 +4,9 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from .const import DOMAIN, KEYS
+from .const import DOMAIN, KEYS, CLOUD_KEYS
 from .ecu_api import APsystemsSocket, APsystemsInvalidData
+from .cloud_api import APsystemsCloudAPI, APsystemsCloudError
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +19,9 @@ CACHE_REBOOT = 3
 SHOW_GRAPHS = True
 WIFI_SSID = "ECU-WIFI_local"
 WIFI_PASSWORD = "default"
+CLOUD_APP_ID = ""
+CLOUD_APP_SECRET = ""
+CLOUD_SID = ""
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -41,19 +45,25 @@ class FlowHandler(config_entries.ConfigFlow):
                 vol.Optional(KEYS[4], default=SHOW_GRAPHS): bool,
                 vol.Optional(KEYS[5], default=WIFI_SSID): str,
                 vol.Optional(KEYS[6], default=WIFI_PASSWORD): str,
+                vol.Optional(KEYS[7], default=CLOUD_APP_ID): str,
+                vol.Optional(KEYS[8], default=CLOUD_APP_SECRET): str,
+                vol.Optional(KEYS[9], default=CLOUD_SID): str,
             }
         )
 
         if user_input:
-            ecu_id = await test_ecu_connection(user_input)
-            if ecu_id:
+            cloud_error = await test_cloud_connection(user_input)
+            if cloud_error:
+                errors[cloud_error[0]] = cloud_error[1]
+            elif ecu_id := await test_ecu_connection(user_input):
                 await self.async_set_unique_id(ecu_id)
                 self._abort_if_unique_id_configured()
                 # Use the ECU-ID in the title to ensure uniqueness
                 return self.async_create_entry(
                     title=f"APsystems ECU {ecu_id}", data=user_input
                 )
-            errors["ecu_host"] = "no_ecu_found"
+            else:
+                errors["ecu_host"] = "no_ecu_found"
 
         # Show form because user input is empty.
         return self.async_show_form(
@@ -93,17 +103,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(KEYS[4], default=_config.get(KEYS[4], SHOW_GRAPHS)): bool,
                 vol.Optional(KEYS[5], default=_config.get(KEYS[5], WIFI_SSID)): str,
                 vol.Optional(KEYS[6], default=_config.get(KEYS[6], WIFI_PASSWORD)): str,
+                vol.Optional(KEYS[7], default=_config.get(KEYS[7], CLOUD_APP_ID)): str,
+                vol.Optional(
+                    KEYS[8], default=_config.get(KEYS[8], CLOUD_APP_SECRET)
+                ): str,
+                vol.Optional(KEYS[9], default=_config.get(KEYS[9], CLOUD_SID)): str,
             }
         )
 
         if user_input:
-            ecu_id = await test_ecu_connection(user_input)
-            if ecu_id:
+            cloud_error = await test_cloud_connection(user_input)
+            if cloud_error:
+                errors[cloud_error[0]] = cloud_error[1]
+            elif ecu_id := await test_ecu_connection(user_input):
                 self.hass.config_entries.async_update_entry(
                     self.entry, data={**self.entry.data, **user_input}
                 )
                 return self.async_create_entry(title="APsystems", data={})
-            errors["ecu_host"] = "no_ecu_found"
+            else:
+                errors["ecu_host"] = "no_ecu_found"
         return self.async_show_form(
             step_id="init", data_schema=alter_schema, errors=errors
         )
@@ -122,3 +140,21 @@ async def test_ecu_connection(input_data):
             "APsystems invalid data exception for ECU %s: %s", ecu.ecu_id, err
         )
         return None
+
+
+async def test_cloud_connection(input_data):
+    """Validate the optional OpenAPI settings, return (field, error) on failure."""
+    for key in CLOUD_KEYS:
+        input_data[key] = input_data.get(key, "").strip()
+    values = [input_data[key] for key in CLOUD_KEYS]
+    if not any(values):
+        return None
+    if not all(values):
+        missing = next(key for key in CLOUD_KEYS if not input_data[key])
+        return missing, "cloud_incomplete"
+    try:
+        await APsystemsCloudAPI(*values).get_meter_eid()
+    except APsystemsCloudError as err:
+        _LOGGER.warning("APsystems OpenAPI test failed: %s", err)
+        return KEYS[7], "cloud_connection_failed"
+    return None

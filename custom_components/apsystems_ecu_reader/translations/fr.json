@@ -9,14 +9,19 @@
           "cache_reboot": "Nombre de caches avant un redémarrage automatique de l'ECU (modèles ECU-R-Pro et ECU-C)",
           "show_graphs": "Mettre à jour les graphiques lorsque les onduleurs sont hors ligne",
           "wifi_ssid": "Spécifier le SSID (uniquement pour les modèles ECU-R-Pro et ECU-C)",
-          "wifi_password": "Spécifier le mot de passe (uniquement pour les modèles ECU-R-Pro et ECU-C)"
+          "wifi_password": "Spécifier le mot de passe (uniquement pour les modèles ECU-R-Pro et ECU-C)",
+          "cloud_app_id": "App Id de l'OpenAPI APsystems (facultatif, pour l'énergie du compteur depuis le cloud)",
+          "cloud_app_secret": "App Secret de l'OpenAPI APsystems (facultatif)",
+          "cloud_sid": "Identifiant du système EMA - SID (facultatif)"
         },
         "title": "Configuration ECU d'APsystems"
       }
     },
     "error": {
       "no_ecu_found": "Aucune ECU trouvée à cette adresse IP ou l'ECU est en train de récupérer d'un redémarrage",
-      "unknown": "Erreur inconnue, consultez le journal pour plus de détails."
+      "unknown": "Erreur inconnue, consultez le journal pour plus de détails.",
+      "cloud_incomplete": "Renseignez l'App Id, l'App Secret et l'identifiant du système pour utiliser l'OpenAPI APsystems",
+      "cloud_connection_failed": "Impossible de joindre l'OpenAPI APsystems ou aucun compteur trouvé, vérifiez l'App Id, l'App Secret et l'identifiant du système"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -32,14 +37,19 @@
           "cache_reboot": "Nombre de caches avant un redémarrage automatique de l'ECU (modèles ECU-R-Pro et ECU-C)",
           "show_graphs": "Mettre à jour les graphiques lorsque les onduleurs sont hors ligne",
           "wifi_ssid": "Spécifier le SSID (uniquement pour les modèles ECU-R-Pro et ECU-C)",
-          "wifi_password": "Spécifier le mot de passe (uniquement pour les modèles ECU-R-Pro et ECU-C)"
+          "wifi_password": "Spécifier le mot de passe (uniquement pour les modèles ECU-R-Pro et ECU-C)",
+          "cloud_app_id": "App Id de l'OpenAPI APsystems (facultatif, pour l'énergie du compteur depuis le cloud)",
+          "cloud_app_secret": "App Secret de l'OpenAPI APsystems (facultatif)",
+          "cloud_sid": "Identifiant du système EMA - SID (facultatif)"
         },
         "title": "Configuration ECU d'APsystems"
       }
     },
     "error": {
       "no_ecu_found": "Aucune ECU trouvée à cette adresse IP ou l'ECU est en train de récupérer d'un redémarrage",
-      "unknown": "Erreur inconnue, consultez le journal pour plus de détails"
+      "unknown": "Erreur inconnue, consultez le journal pour plus de détails",
+      "cloud_incomplete": "Renseignez l'App Id, l'App Secret et l'identifiant du système pour utiliser l'OpenAPI APsystems",
+      "cloud_connection_failed": "Impossible de joindre l'OpenAPI APsystems ou aucun compteur trouvé, vérifiez l'App Id, l'App Secret et l'identifiant du système"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

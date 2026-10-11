@@ -9,14 +9,19 @@
             "cache_reboot": "Cache count before auto ECU reboot (ECU-R-Pro & ECU-C models)",
             "show_graphs": "Update graphs when inverters are offline",
             "wifi_ssid": "Specify SSID (ECU-R-Pro and ECU-C models only)",
-            "wifi_password": "Specify password (ECU-R-Pro and ECU-C models only)"
+            "wifi_password": "Specify password (ECU-R-Pro and ECU-C models only)",
+            "cloud_app_id": "APsystems OpenAPI App Id (optional, for meter energy from the cloud)",
+            "cloud_app_secret": "APsystems OpenAPI App Secret (optional)",
+            "cloud_sid": "APsystems EMA System Id - SID (optional)"
           },
           "title": "APsystems ECU Configuration"
         }
       },
       "error": {
         "no_ecu_found": "No ECU found at this IP-address or ECU is recovering from restart",
-        "unknown": "Unknown error, see log for details."
+        "unknown": "Unknown error, see log for details.",
+        "cloud_incomplete": "Fill in App Id, App Secret and System Id to use the APsystems OpenAPI",
+        "cloud_connection_failed": "Unable to reach the APsystems OpenAPI or no meter found, check App Id, App Secret and System Id"
       },
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -32,14 +37,19 @@
             "cache_reboot": "Cache count before auto ECU reboot (ECU-R-Pro and ECU-C models)",
             "show_graphs": "Update graphs when inverters are offline",
             "wifi_ssid": "Specify SSID (ECU-R-Pro and ECU-C models only)",
-            "wifi_password": "Specify password (ECU-R-Pro and ECU-C models only)"
+            "wifi_password": "Specify password (ECU-R-Pro and ECU-C models only)",
+            "cloud_app_id": "APsystems OpenAPI App Id (optional, for meter energy from the cloud)",
+            "cloud_app_secret": "APsystems OpenAPI App Secret (optional)",
+            "cloud_sid": "APsystems EMA System Id - SID (optional)"
           },
           "title": "APsystems ECU Configuration"
         }
       },
       "error": {
         "no_ecu_found": "No ECU found at this IP-address or ECU is recovering from restart",
-        "unknown": "Unknown error, see log for details"
+        "unknown": "Unknown error, see log for details",
+        "cloud_incomplete": "Fill in App Id, App Secret and System Id to use the APsystems OpenAPI",
+        "cloud_connection_failed": "Unable to reach the APsystems OpenAPI or no meter found, check App Id, App Secret and System Id"
       },
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

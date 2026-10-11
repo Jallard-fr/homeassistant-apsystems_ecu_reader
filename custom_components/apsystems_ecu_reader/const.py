@@ -13,6 +13,8 @@ ECU_REBOOT_ICON = "mdi:restart"
 FROM_GRID_ICON = "mdi:transmission-tower-export"
 CONSUMED_ICON = "mdi:transmission-tower"
 DOWNLOAD_ICON = "mdi:download"
+TO_GRID_ICON = "mdi:transmission-tower-import"
+HOME_ICON = "mdi:home-lightning-bolt"
 
 
 # Config flow schema. These are also translated through json translations
@@ -24,7 +26,11 @@ KEYS = [
     "show_graphs",
     "wifi_ssid",
     "wifi_password",
+    "cloud_app_id",
+    "cloud_app_secret",
+    "cloud_sid",
 ]
+CLOUD_KEYS = KEYS[7:10]
 
 # Model maps for ECU and inverter types
 ECU_MODEL_MAP = {
@@ -50,3 +56,8 @@ SETUP_DELAY_SECONDS = 10
 DEFAULT_SCAN_INTERVAL = 300
 DEFAULT_PORT_RETRIES = 2
 DEFAULT_CACHE_REBOOT = 3
+
+# APsystems OpenAPI (EMA cloud)
+CLOUD_BASE_URL = "https://api.apsystemsema.com:9282"
+CLOUD_PERIODS = ["today", "lifetime"]
+CLOUD_METER_FIELDS = ["produced", "consumed", "imported", "exported"]
