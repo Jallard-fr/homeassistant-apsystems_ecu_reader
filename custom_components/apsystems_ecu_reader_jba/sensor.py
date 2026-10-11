@@ -42,6 +42,7 @@ from .const import (
     INVERTER_MODEL_MAP,
     CLOUD_PERIODS,
     CLOUD_METER_FIELDS,
+    CLOUD_MONTHLY_BUDGET,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -261,6 +262,16 @@ async def async_setup_entry(hass, config_entry, add_entities):
             for period in CLOUD_PERIODS
             for field in CLOUD_METER_FIELDS
         )
+        sensors.append(
+            APsystemsCloudMeterSensor(
+                coordinator,
+                ecu,
+                "cloud_calls_month",
+                label=f"{ecu.ecu.ecu_id} OpenAPI Calls This Month",
+                icon=CACHE_COUNTER_ICON,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        )
 
     # Add inverter binary sensors
     inverters = coordinator.data.get("inverters", {})
@@ -375,9 +386,9 @@ class APsystemsECUInverterBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._ecu = ecu
         self._uid = uid
         self._inv_data = inv_data
-        self._name = f"Inverter {uid} Online"
+        self._name = f"JBA Inverter {uid} Online"
         self._state = inv_data.get("online", False)
-        self._attr_name = f"Inverter {uid} Online"
+        self._attr_name = f"JBA Inverter {uid} Online"
 
         # Set custom state attributes for activity log
         self._attr_device_class = None
@@ -421,7 +432,7 @@ class APsystemsECUInverterBinarySensor(CoordinatorEntity, BinarySensorEntity):
             "identifiers": {
                 (DOMAIN, parent),
             },
-            "name": f"Inverter {self._uid}",
+            "name": f"JBA Inverter {self._uid}",
             "manufacturer": "APsystems",
             "model": INVERTER_MODEL_MAP.get(self._uid[:2], "Unknown Model"),
         }
@@ -490,7 +501,7 @@ class APsystemsECUInverterSensor(CoordinatorEntity, SensorEntity):
         self._unit = unit
         self._stateclass = stateclass
         self._entity_category = entity_category
-        self._name = f"Inverter {self._uid} {self._label}"
+        self._name = f"JBA Inverter {self._uid} {self._label}"
         self._state = None
 
     @property
@@ -594,7 +605,7 @@ class APsystemsECUSensor(CoordinatorEntity, SensorEntity, RestoreEntity):
         self._stateclass = stateclass
         self._entity_category = entity_category
         #    self._disabled_by = disabled_by
-        self._name = f"ECU {self._label}"
+        self._name = f"JBA ECU {self._label}"
         self._state = None
 
     async def async_added_to_hass(self):
@@ -681,6 +692,8 @@ class APsystemsCloudMeterSensor(APsystemsECUSensor):
         return {
             "system_id": self._ecu.cloud_api.sid,
             "meter_id": self._ecu.cloud_api.eid,
+            "poll_interval_minutes": self._ecu.cloud_interval,
+            "monthly_budget": CLOUD_MONTHLY_BUDGET,
         }
 
 

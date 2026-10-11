@@ -70,7 +70,7 @@ class APsystemsBaseSwitch(CoordinatorEntity, SwitchEntity, RestoreEntity):
             "identifiers": {
                 (DOMAIN, f"ecu_{self._ecu.ecu.ecu_id}"),
             },
-            "name": f"ECU {self._ecu.ecu.ecu_id}",
+            "name": f"JBA ECU {self._ecu.ecu.ecu_id}",
             "manufacturer": "APsystems",
             "model": ECU_MODEL_MAP.get(self._ecu.ecu.ecu_id[:4], "Unknown Model"),
             "sw_version": self._ecu.ecu.firmware,
@@ -115,7 +115,7 @@ class APsystemsECUInverterSwitch(APsystemsBaseSwitch):
         super().__init__(
             coordinator,
             ecu,
-            name=f"Inverter {uid} On/Off",
+            name=f"JBA Inverter {uid} On/Off",
             unique_id=f"{ecu.ecu.ecu_id}_inverter_{uid}",
             icon=POWER_ICON,
             entity_category=EntityCategory.CONFIG,
@@ -140,7 +140,7 @@ class APsystemsECUInverterSwitch(APsystemsBaseSwitch):
             "identifiers": {
                 (DOMAIN, parent),
             },
-            "name": f"Inverter {self._uid}",
+            "name": f"JBA Inverter {self._uid}",
             "manufacturer": "APsystems",
             "model": INVERTER_MODEL_MAP.get(self._uid[:2], "Unknown Model"),
         }
@@ -165,7 +165,7 @@ class APsystemsZeroExportSwitch(APsystemsBaseSwitch):
         super().__init__(
             coordinator,
             ecu,
-            name=f"ECU {ecu.ecu.ecu_id} Zero Export",
+            name=f"JBA ECU {ecu.ecu.ecu_id} Zero Export",
             unique_id=f"ECU_{ecu.ecu.ecu_id}_zero_export_switch",
             icon=POWER_ICON,
             entity_category=EntityCategory.CONFIG,
@@ -220,7 +220,7 @@ class APsystemsECUQuerySwitch(APsystemsBaseSwitch):
         super().__init__(
             coordinator,
             ecu,
-            name=f"ECU {ecu.ecu.ecu_id} Query ECU",
+            name=f"JBA ECU {ecu.ecu.ecu_id} Query ECU",
             unique_id=f"ECU_{ecu.ecu.ecu_id}_query_switch",
             icon="mdi:access-point-network",
             entity_category=EntityCategory.CONFIG,

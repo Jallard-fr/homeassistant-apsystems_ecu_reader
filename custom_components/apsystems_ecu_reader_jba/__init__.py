@@ -2,10 +2,13 @@
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -15,6 +18,8 @@ from .const import (
     SETUP_DELAY_SECONDS,
     DEFAULT_CACHE_REBOOT,
     CLOUD_KEYS,
+    CLOUD_MONTHLY_BUDGET,
+    DEFAULT_CLOUD_INTERVAL,
 )
 from .ecu_api import APsystemsSocket, APsystemsInvalidData
 from .cloud_api import APsystemsCloudAPI, APsystemsCloudError
@@ -41,6 +46,8 @@ class ECUREADER:
         wifi_password: str,
         show_graphs: bool,
         cloud_api: APsystemsCloudAPI | None = None,
+        cloud_store: Store | None = None,
+        cloud_interval: int = DEFAULT_CLOUD_INTERVAL,
     ) -> None:
 
         self.ipaddr = ipaddr
@@ -53,6 +60,9 @@ class ECUREADER:
         self.cached_data = {}
         self.query_enabled = True
         self.cloud_api = cloud_api
+        self.cloud_store = cloud_store
+        self.cloud_interval = cloud_interval
+        self.cloud_state = None
         self.cloud_data = {}
 
     # called from number.py
@@ -82,17 +92,55 @@ class ECUREADER:
         )
 
     async def update_cloud(self):
-        """Fetch meter energy from the APsystems OpenAPI, keep last values on error."""
+        """Fetch meter energy from the APsystems OpenAPI within the monthly quota.
+
+        The call counter, last fetch time and last values are persisted so a
+        Home Assistant restart does not cost extra calls.
+        """
         if not self.cloud_api:
             return
-        try:
-            self.cloud_data = await self.cloud_api.get_meter_summary()
-        except APsystemsCloudError as err:
-            _LOGGER.warning(
-                "Using previous APsystems OpenAPI data for system %s: %s",
-                self.cloud_api.sid,
-                err,
+        if self.cloud_state is None:
+            self.cloud_state = await self.cloud_store.async_load() or {}
+            self.cloud_data = self.cloud_state.get("data", {})
+            self.cloud_api.eid = self.cloud_state.get("eid")
+
+        now = dt_util.now()
+        if self.cloud_state.get("month") != now.strftime("%Y-%m"):
+            self.cloud_state.update(month=now.strftime("%Y-%m"), calls=0)
+        # Values of a previous day are not today's values anymore
+        if self.cloud_state.get("date") != now.date().isoformat():
+            for key in self.cloud_data:
+                if key.startswith("cloud_today_"):
+                    self.cloud_data[key] = None
+
+        if time.time() - self.cloud_state.get("last_fetch", 0) >= (
+            self.cloud_interval * 60
+        ):
+            if self.cloud_state["calls"] >= CLOUD_MONTHLY_BUDGET:
+                _LOGGER.warning(
+                    "APsystems OpenAPI monthly budget of %s calls reached, "
+                    "polling resumes next month",
+                    CLOUD_MONTHLY_BUDGET,
+                )
+            else:
+                calls_before = self.cloud_api.calls
+                try:
+                    self.cloud_data = await self.cloud_api.get_meter_summary()
+                    self.cloud_state["date"] = now.date().isoformat()
+                except APsystemsCloudError as err:
+                    _LOGGER.warning(
+                        "Using previous APsystems OpenAPI data for system %s: %s",
+                        self.cloud_api.sid,
+                        err,
+                    )
+                self.cloud_state["calls"] += self.cloud_api.calls - calls_before
+            # Also set on failure or full budget, so errors do not cause extra calls
+            self.cloud_state.update(
+                last_fetch=time.time(), eid=self.cloud_api.eid, data=self.cloud_data
             )
+            await self.cloud_store.async_save(self.cloud_state)
+
+        self.cloud_data["cloud_calls_month"] = self.cloud_state["calls"]
 
     async def update(self, port_retries, cache_reboot, show_graphs):
         """Fetch ECU data or use cached data if querying failed."""
@@ -162,6 +210,7 @@ async def update_listener(hass, config):
     if current != (wanted if all(wanted) else None):
         hass.config_entries.async_schedule_reload(config.entry_id)
         return
+    ecu.cloud_interval = config.data.get("cloud_interval", DEFAULT_CLOUD_INTERVAL)
     # Update the scan interval
     new_interval = timedelta(seconds=config_dict["data"]["scan_interval"])
     coordinator = hass.data[DOMAIN][config.entry_id]["coordinator"]
@@ -183,6 +232,7 @@ async def async_setup_entry(hass, config):
     cloud_api = None
     if all(config.data.get(key) for key in CLOUD_KEYS):
         cloud_api = APsystemsCloudAPI(*(config.data[key] for key in CLOUD_KEYS))
+    cloud_store = Store(hass, 1, f"{DOMAIN}.{config.entry_id}.cloud")
 
     ecu = ECUREADER(
         config.data["ecu_host"],
@@ -190,6 +240,8 @@ async def async_setup_entry(hass, config):
         config.data.get("wifi_password", "default"),
         config.data.get("show_graphs", True),
         cloud_api,
+        cloud_store,
+        config.data.get("cloud_interval", DEFAULT_CLOUD_INTERVAL),
     )
 
     async def do_ecu_update():
@@ -233,7 +285,7 @@ async def async_setup_entry(hass, config):
         identifiers={(DOMAIN, f"ecu_{ecu.ecu.ecu_id}")},
         manufacturer="APsystems",
         suggested_area="Roof",
-        name=f"ECU {ecu.ecu.ecu_id}",
+        name=f"JBA ECU {ecu.ecu.ecu_id}",
         model=ECU_MODEL_MAP.get(ecu.ecu.ecu_id[:4], "Unknown Model"),
         sw_version=ecu.ecu.firmware,
     )
@@ -246,7 +298,7 @@ async def async_setup_entry(hass, config):
             identifiers={(DOMAIN, f"inverter_{uid}")},
             manufacturer="APsystems",
             suggested_area="Roof",
-            name=f"Inverter {uid}",
+            name=f"JBA Inverter {uid}",
             model=inv_data.get("model"),
             via_device_id=ecu_device.id,
         )

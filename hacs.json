@@ -1,7 +1,7 @@
 {
-  "name": "APsystems ECU Reader",
+  "name": "APsystems ECU Reader JBA",
   "content_in_root": false,
-  "filename": "apsystems_ecu_reader",
+  "filename": "apsystems_ecu_reader_jba",
   "country": [],
   "homeassistant": "2024.1.0",
   "render_readme": true

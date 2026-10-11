@@ -1,6 +1,6 @@
 """const.py"""
 
-DOMAIN = "apsystems_ecu_reader"
+DOMAIN = "apsystems_ecu_reader_jba"
 
 SOLAR_ICON = "mdi:solar-power"
 FREQ_ICON = "mdi:sine-wave"
@@ -29,6 +29,7 @@ KEYS = [
     "cloud_app_id",
     "cloud_app_secret",
     "cloud_sid",
+    "cloud_interval",
 ]
 CLOUD_KEYS = KEYS[7:10]
 
@@ -61,3 +62,8 @@ DEFAULT_CACHE_REBOOT = 3
 CLOUD_BASE_URL = "https://api.apsystemsema.com:9282"
 CLOUD_PERIODS = ["today", "lifetime"]
 CLOUD_METER_FIELDS = ["produced", "consumed", "imported", "exported"]
+# Default APsystems quota is 1000 calls/month: poll every 60 minutes (~744 calls)
+# and stop polling once the monthly budget is reached.
+DEFAULT_CLOUD_INTERVAL = 60  # minutes
+MIN_CLOUD_INTERVAL = 15  # minutes
+CLOUD_MONTHLY_BUDGET = 950
