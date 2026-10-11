@@ -14,8 +14,10 @@ from .const import (
     DEFAULT_PORT_RETRIES,
     SETUP_DELAY_SECONDS,
     DEFAULT_CACHE_REBOOT,
+    CLOUD_KEYS,
 )
 from .ecu_api import APsystemsSocket, APsystemsInvalidData
+from .cloud_api import APsystemsCloudAPI, APsystemsCloudError
 from .gui_helpers import (
     set_inverter_state,
     set_zero_export,
@@ -33,7 +35,12 @@ class ECUREADER:
     """ECU Reader"""
 
     def __init__(
-        self, ipaddr: str, wifi_ssid: str, wifi_password: str, show_graphs: bool
+        self,
+        ipaddr: str,
+        wifi_ssid: str,
+        wifi_password: str,
+        show_graphs: bool,
+        cloud_api: APsystemsCloudAPI | None = None,
     ) -> None:
 
         self.ipaddr = ipaddr
@@ -45,6 +52,8 @@ class ECUREADER:
         self.data_from_cache_count = 0
         self.cached_data = {}
         self.query_enabled = True
+        self.cloud_api = cloud_api
+        self.cloud_data = {}
 
     # called from number.py
     async def set_inverter_max_power(self, inverter_uid, max_panel_power):
@@ -71,6 +80,19 @@ class ECUREADER:
         return await reboot_ecu(
             self.ipaddr, self.wifi_ssid, self.wifi_password, self.cached_data
         )
+
+    async def update_cloud(self):
+        """Fetch meter energy from the APsystems OpenAPI, keep last values on error."""
+        if not self.cloud_api:
+            return
+        try:
+            self.cloud_data = await self.cloud_api.get_meter_summary()
+        except APsystemsCloudError as err:
+            _LOGGER.warning(
+                "Using previous APsystems OpenAPI data for system %s: %s",
+                self.cloud_api.sid,
+                err,
+            )
 
     async def update(self, port_retries, cache_reboot, show_graphs):
         """Fetch ECU data or use cached data if querying failed."""
@@ -113,6 +135,10 @@ class ECUREADER:
                     "Using cached data for ECU %s: %s", self.ecu.ecu_id, err
                 )
 
+        # Add meter energy from the APsystems OpenAPI
+        await self.update_cloud()
+        self.cached_data.update(self.cloud_data)
+
         # Set cache sensors
         self.cached_data["data_from_cache"] = self.data_from_cache
         self.cached_data["data_from_cache_count"] = self.data_from_cache_count
@@ -125,6 +151,17 @@ async def update_listener(hass, config):
     """Handle options update, triggered by config entry options updates"""
     _LOGGER.debug("Configuration updated: %s", config.as_dict())
     config_dict = config.as_dict()
+    # Reload the entry when the OpenAPI settings changed so cloud sensors are (re)created
+    ecu = hass.data[DOMAIN][config.entry_id]["ecu"]
+    current = (
+        (ecu.cloud_api.app_id, ecu.cloud_api.app_secret, ecu.cloud_api.sid)
+        if ecu.cloud_api
+        else None
+    )
+    wanted = tuple(config.data.get(key, "") for key in CLOUD_KEYS)
+    if current != (wanted if all(wanted) else None):
+        hass.config_entries.async_schedule_reload(config.entry_id)
+        return
     # Update the scan interval
     new_interval = timedelta(seconds=config_dict["data"]["scan_interval"])
     coordinator = hass.data[DOMAIN][config.entry_id]["coordinator"]
@@ -143,11 +180,16 @@ async def async_setup_entry(hass, config):
     interval = timedelta(
         seconds=config.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
     )
+    cloud_api = None
+    if all(config.data.get(key) for key in CLOUD_KEYS):
+        cloud_api = APsystemsCloudAPI(*(config.data[key] for key in CLOUD_KEYS))
+
     ecu = ECUREADER(
         config.data["ecu_host"],
         config.data.get("wifi_ssid", "ECU-local"),
         config.data.get("wifi_password", "default"),
         config.data.get("show_graphs", True),
+        cloud_api,
     )
 
     async def do_ecu_update():

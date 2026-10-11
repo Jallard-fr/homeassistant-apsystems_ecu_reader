@@ -37,7 +37,11 @@ from .const import (
     FROM_GRID_ICON,
     CONSUMED_ICON,
     DOWNLOAD_ICON,
+    TO_GRID_ICON,
+    HOME_ICON,
     INVERTER_MODEL_MAP,
+    CLOUD_PERIODS,
+    CLOUD_METER_FIELDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -233,6 +237,29 @@ async def async_setup_entry(hass, config_entry, add_entities):
                     stateclass=SensorStateClass.MEASUREMENT,
                 ),
             ]
+        )
+
+    # Add meter energy sensors from the APsystems OpenAPI (when configured)
+    if ecu.cloud_api:
+        icons = {
+            "produced": SOLAR_ICON,
+            "consumed": HOME_ICON,
+            "imported": FROM_GRID_ICON,
+            "exported": TO_GRID_ICON,
+        }
+        sensors.extend(
+            APsystemsCloudMeterSensor(
+                coordinator,
+                ecu,
+                f"cloud_{period}_{field}",
+                label=f"{ecu.ecu.ecu_id} Meter {period.capitalize()} {field.capitalize()}",
+                unit=UnitOfEnergy.KILO_WATT_HOUR,
+                devclass=SensorDeviceClass.ENERGY,
+                icon=icons[field],
+                stateclass=SensorStateClass.TOTAL_INCREASING,
+            )
+            for period in CLOUD_PERIODS
+            for field in CLOUD_METER_FIELDS
         )
 
     # Add inverter binary sensors
@@ -639,6 +666,22 @@ class APsystemsECUSensor(CoordinatorEntity, SensorEntity, RestoreEntity):
     @property
     def entity_category(self):
         return self._entity_category
+
+
+class APsystemsCloudMeterSensor(APsystemsECUSensor):
+    """Meter energy sensor fed by the APsystems OpenAPI."""
+
+    @property
+    def native_value(self):
+        """Return None instead of 0 when no cloud data is available."""
+        return self.coordinator.data.get(self._field)
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "system_id": self._ecu.cloud_api.sid,
+            "meter_id": self._ecu.cloud_api.eid,
+        }
 
 
 class APsystemsECUFirmwareSensor(CoordinatorEntity, SensorEntity, RestoreEntity):

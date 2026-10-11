@@ -127,6 +127,7 @@ Preferably assign a fixed IP address to the ECU. Make sure you have the correct 
 - **Cache count before auto reboot**: For ECU-R-Pro & ECU-C.
 - **Update graphs when inverters offline**: On/Off.
 - **SSID and Password**: For forced ECU reboot (ECU-R-Pro & ECU-C).
+- **OpenAPI App Id, App Secret and System Id (optional)**: When all three are filled in, the meter energy is fetched from the [APsystems OpenAPI](https://api.apsystemsema.com:9282) (cloud) at every query interval. The meter id (EID) is discovered automatically. This adds 8 energy sensors (kWh) to the ECU device: `Meter Today` and `Meter Lifetime` for **Produced**, **Consumed**, **Imported** and **Exported**. Request the App Id and App Secret from APsystems support; the System Id (SID) is shown in your EMA account. Note that APsystems may limit or charge OpenAPI calls depending on the access count.
 
 ---
 

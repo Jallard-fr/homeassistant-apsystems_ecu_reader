@@ -9,14 +9,19 @@
           "cache_reboot": "Anzahl der Caches vor einem automatischen ECU-Neustart (ECU-R-Pro- und ECU-C-Modelle)",
           "show_graphs": "Diagramme aktualisieren, wenn Wechselrichter offline sind",
           "wifi_ssid": "SSID angeben (nur für ECU-R-Pro und ECU-C-Modelle)",
-          "wifi_password": "Passwort angeben (nur für ECU-R-Pro und ECU-C-Modelle)"
+          "wifi_password": "Passwort angeben (nur für ECU-R-Pro und ECU-C-Modelle)",
+          "cloud_app_id": "APsystems OpenAPI App Id (optional, Zählerenergie aus der Cloud)",
+          "cloud_app_secret": "APsystems OpenAPI App Secret (optional)",
+          "cloud_sid": "APsystems EMA System-ID - SID (optional)"
         },
         "title": "APsystems ECU-Konfiguration"
       }
     },
     "error": {
       "no_ecu_found": "Keine ECU an dieser IP-Adresse gefunden oder die ECU wird von einem Neustart wiederhergestellt",
-      "unknown": "Unbekannter Fehler, siehe Protokoll für Details."
+      "unknown": "Unbekannter Fehler, siehe Protokoll für Details.",
+      "cloud_incomplete": "App Id, App Secret und System-ID ausfüllen, um die APsystems OpenAPI zu nutzen",
+      "cloud_connection_failed": "APsystems OpenAPI nicht erreichbar oder kein Zähler gefunden, App Id, App Secret und System-ID prüfen"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -32,14 +37,19 @@
           "cache_reboot": "Anzahl der Caches vor einem automatischen ECU-Neustart (ECU-R-Pro- und ECU-C-Modelle)",
           "show_graphs": "Diagramme aktualisieren, wenn Wechselrichter offline sind",
           "wifi_ssid": "SSID angeben (nur für ECU-R-Pro und ECU-C-Modelle)",
-          "wifi_password": "Passwort angeben (nur für ECU-R-Pro und ECU-C-Modelle)"
+          "wifi_password": "Passwort angeben (nur für ECU-R-Pro und ECU-C-Modelle)",
+          "cloud_app_id": "APsystems OpenAPI App Id (optional, Zählerenergie aus der Cloud)",
+          "cloud_app_secret": "APsystems OpenAPI App Secret (optional)",
+          "cloud_sid": "APsystems EMA System-ID - SID (optional)"
         },
         "title": "APsystems ECU-Konfiguration"
       }
     },
     "error": {
       "no_ecu_found": "Keine ECU an dieser IP-Adresse gefunden oder die ECU wird von einem Neustart wiederhergestellt",
-      "unknown": "Unbekannter Fehler, siehe Protokoll für Details"
+      "unknown": "Unbekannter Fehler, siehe Protokoll für Details",
+      "cloud_incomplete": "App Id, App Secret und System-ID ausfüllen, um die APsystems OpenAPI zu nutzen",
+      "cloud_connection_failed": "APsystems OpenAPI nicht erreichbar oder kein Zähler gefunden, App Id, App Secret und System-ID prüfen"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
