@@ -38,7 +38,16 @@ WEB_PATHS = [
     "index.php/meter/meter_energy_graph",
 ]
 
+# Graph endpoints also queried by POST with today's date, like the ECU web
+# pages do, in case a plain GET returns "No Data"
+POST_DATE_PATHS = [
+    "index.php/meter/old_meter_power_graph",
+    "index.php/meter/old_meter_energy_graph",
+    "index.php/realtimedata/old_power_graph",
+]
+
 MAX_TEXT = 20000
+MAX_SCRIPT = 6000
 
 
 def socket_commands(ecu_id):
@@ -196,32 +205,55 @@ def json_keys(value, prefix=""):
     return {prefix.rstrip("."): type(value).__name__}
 
 
+def describe_body(body):
+    """Return the JSON content, or the text, endpoints and scripts of a page."""
+    try:
+        parsed = json.loads(body)
+        return {"json_structure": json_keys(parsed), "json": parsed}
+    except ValueError:
+        pass
+    scripts = re.findall(r"<script[^>]*>(.*?)</script>", body, flags=re.S)
+    text = re.sub(r"<script.*?</script>", " ", body, flags=re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return {
+        "text": re.sub(r"\s+", " ", text).strip()[:MAX_TEXT],
+        # Endpoints and parameters the page itself calls (AJAX)
+        "referenced_endpoints": sorted(
+            set(re.findall(r"index\.php/[A-Za-z0-9_/]+", body))
+        ),
+        "scripts": [
+            script.strip()[:MAX_SCRIPT]
+            for script in scripts
+            if "ajax" in script or "index.php" in script or "url" in script
+        ],
+    }
+
+
 async def probe_web(ipaddr):
-    """GET the read-only local web pages and return their raw content."""
+    """Query the read-only local web pages and return their raw content."""
     results = {}
     headers = {"X-Requested-With": "XMLHttpRequest"}
+    today = dt_util.now().strftime("%Y-%m-%d")
+    requests = [("GET", path, None) for path in WEB_PATHS] + [
+        ("POST", path, {"date": today}) for path in POST_DATE_PATHS
+    ]
     async with aiohttp.ClientSession() as session:
-        for path in WEB_PATHS:
+        for method, path, form in requests:
+            key = path if method == "GET" else f"POST {path} date={today}"
             url = f"http://{ipaddr}/{path}"
             try:
-                async with session.get(url, headers=headers, timeout=15) as resp:
+                async with session.request(
+                    method, url, headers=headers, data=form, timeout=15
+                ) as resp:
                     body = await resp.text(errors="replace")
-                    entry = {
+                    results[key] = {
                         "status": resp.status,
                         "content_type": resp.headers.get("Content-Type"),
                         "length": len(body),
+                        **describe_body(body),
                     }
-                    try:
-                        parsed = json.loads(body)
-                        entry["json_structure"] = json_keys(parsed)
-                        entry["json"] = parsed
-                    except ValueError:
-                        text = re.sub(r"<script.*?</script>", " ", body, flags=re.S)
-                        text = re.sub(r"<[^>]+>", " ", text)
-                        entry["text"] = re.sub(r"\s+", " ", text).strip()[:MAX_TEXT]
-                    results[path] = entry
             except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-                results[path] = {"error": repr(err)}
+                results[key] = {"error": repr(err)}
     return results
 
 

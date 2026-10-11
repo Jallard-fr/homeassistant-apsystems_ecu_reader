@@ -5,6 +5,7 @@
 import asyncio
 import logging
 import errno
+import time
 
 from .ecu_helpers import (
     aps_datetimestamp,
@@ -47,6 +48,8 @@ class APsystemsSocket:
         self.ecu_raw_data = raw_ecu
         self.inverter_raw_data = raw_inverter
         self.signal_raw_data = None
+        self.energy_query_prefix = "APS1100300004"
+        self.energy_periods_update = 0
         self.qty_of_inverters = 0
         self.qty_of_online_inverters = 0
         self.lifetime_energy = 0
@@ -211,6 +214,10 @@ class APsystemsSocket:
                     self.signal_raw_data.hex(),
                 )
 
+                # Production of the week, month and year, refreshed every hour
+                if time.monotonic() - self.energy_periods_update >= 3600:
+                    await self.update_energy_periods(port_retries)
+
                 # Add CT data to the dictionary for ECU-C models only
                 if self.ecu_id.startswith("215"):
                    await self.add_meter_data()
@@ -218,6 +225,46 @@ class APsystemsSocket:
                 self.process_ecu_data()
                 # Finally all went right so call finalize and return it
                 return self.finalize_data(show_graphs)
+
+    async def query_energy_report(self, port_retries, period):
+        """Query the energy report: period 0=days of week, 2=months of year.
+
+        Return a list of (yyyymmdd, kWh) entries, BCD date + 4 bytes energy/100.
+        """
+        cmd = f"{self.energy_query_prefix}{self.ecu_id}END0{period}\n"
+        await self.open_socket(port_retries)
+        try:
+            data, status = await self.send_read_from_socket(cmd)
+        finally:
+            await self.close_socket()
+        if status or not data or aps_str(data, 9, 4) != "0004":
+            raise APsystemsInvalidData(f"no energy report {period} - {status}")
+        _LOGGER.debug("ECU %s raw energy report %s: %s", self.ipaddr, period, data.hex())
+        end = len(data) - 4 if data.endswith(b"END\n") else len(data)
+        return [
+            (data[pos : pos + 4].hex(), aps_int_from_bytes(data, pos + 4, 4) / 100)
+            for pos in range(17, end - 7, 8)
+        ]
+
+    async def update_energy_periods(self, port_retries):
+        """Add the production of the current week, month and year."""
+        try:
+            week = await self.query_energy_report(port_retries, 0)
+            year = await self.query_energy_report(port_retries, 2)
+        except (APsystemsInvalidData, ValueError) as err:
+            # Not supported by every ECU model, keep the regular data
+            _LOGGER.debug("ECU %s energy periods not available: %s", self.ipaddr, err)
+            return
+        self.energy_periods_update = time.monotonic()
+        if week:
+            self.data["week_energy"] = round(sum(kwh for _, kwh in week), 2)
+        if year:
+            # The last entry is the current month of the ECU
+            current = year[-1][0]
+            self.data["month_energy"] = year[-1][1]
+            self.data["year_energy"] = round(
+                sum(kwh for date, kwh in year if date[:4] == current[:4]), 2
+            )
 
     async def add_meter_data(self):
         """Add the meter data to the dictionary."""
