@@ -39,7 +39,7 @@ class InverterMaxPwrNumber(CoordinatorEntity, RestoreNumber):
         self._ecu = ecu
         self._uid = inverter_id
         self._inv_data = inverter_data
-        self._attr_name = f"Inverter {inverter_id} Maxpwr"
+        self._attr_name = f"JBA Inverter {inverter_id} Maxpwr"
         self._attr_unique_id = f"{DOMAIN}_inverter_{inverter_id}_maxpwr"
         self._attr_native_min_value = 20
         self._attr_native_max_value = 500
@@ -57,7 +57,7 @@ class InverterMaxPwrNumber(CoordinatorEntity, RestoreNumber):
             "identifiers": {
                 (DOMAIN, parent),
             },
-            "name": f"Inverter {self._uid}",
+            "name": f"JBA Inverter {self._uid}",
             "manufacturer": "APsystems",
             "model": INVERTER_MODEL_MAP.get(self._uid[:2], "Unknown Model"),
         }
@@ -92,7 +92,7 @@ class ECUPowerLimitNumber(CoordinatorEntity, RestoreNumber):
         """Initialize the number entity."""
         super().__init__(coordinator)
         self._ecu = ecu
-        self._attr_name = f"ECU {ecu.ecu.ecu_id} Power Limit"
+        self._attr_name = f"JBA ECU {ecu.ecu.ecu_id} Power Limit"
         self._attr_unique_id = f"{ecu.ecu.ecu_id}_power_limit"
         self._attr_native_min_value = 0
         self._attr_native_max_value = 3
@@ -109,7 +109,7 @@ class ECUPowerLimitNumber(CoordinatorEntity, RestoreNumber):
             "identifiers": {
                 (DOMAIN, f"ecu_{self._ecu.ecu.ecu_id}"),
             },
-            "name": f"ECU {self._ecu.ecu.ecu_id}",
+            "name": f"JBA ECU {self._ecu.ecu.ecu_id}",
             "manufacturer": "APsystems",
             "model": ECU_MODEL_MAP.get(self._ecu.ecu.ecu_id[:4], "Unknown Model"),
         }

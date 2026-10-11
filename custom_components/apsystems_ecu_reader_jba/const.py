@@ -1,6 +1,6 @@
 """const.py"""
 
-DOMAIN = "apsystems_ecu_reader"
+DOMAIN = "apsystems_ecu_reader_jba"
 
 SOLAR_ICON = "mdi:solar-power"
 FREQ_ICON = "mdi:sine-wave"
