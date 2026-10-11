@@ -127,7 +127,11 @@ Preferably assign a fixed IP address to the ECU. Make sure you have the correct 
 - **Cache count before auto reboot**: For ECU-R-Pro & ECU-C.
 - **Update graphs when inverters offline**: On/Off.
 - **SSID and Password**: For forced ECU reboot (ECU-R-Pro & ECU-C).
-- **OpenAPI App Id, App Secret and System Id (optional)**: When all three are filled in, the meter energy is fetched from the [APsystems OpenAPI](https://api.apsystemsema.com:9282) (cloud) at every query interval. The meter id (EID) is discovered automatically. This adds 8 energy sensors (kWh) to the ECU device: `Meter Today` and `Meter Lifetime` for **Produced**, **Consumed**, **Imported** and **Exported**. Request the App Id and App Secret from APsystems support; the System Id (SID) is shown in your EMA account. Note that APsystems may limit or charge OpenAPI calls depending on the access count.
+- **OpenAPI App Id, App Secret and System Id (optional)**: When all three are filled in, the meter energy is fetched from the [APsystems OpenAPI](https://api.apsystemsema.com:9282) (cloud). The meter id (EID) is discovered automatically. This adds 8 energy sensors (kWh) to the ECU device: `Meter Today` and `Meter Lifetime` for **Produced**, **Consumed**, **Imported** and **Exported**, plus an `OpenAPI Calls This Month` diagnostic sensor. Request OpenAPI access in the APsystems app; the App Id, App Secret and System Id (SID) are then shown under Account Details > Personal Info.
+- **OpenAPI query interval**: In minutes, 60 by default (about 744 calls/month for the usual quota of 1000 calls/month). Polling stops automatically after 950 calls in a month, and the call counter, last values and meter id are saved so restarting Home Assistant costs no extra calls. Saving the configuration with OpenAPI settings costs one call to validate them.
+
+### Diagnostics
+On the integration page, **Download diagnostics** queries the ECU on demand and returns the raw answers of all known local socket commands (including the day/week/month/year energy reports the integration does not use), a byte map of the ECU answer showing undecoded bytes, and for ECU-C / ECU-R-Pro the raw content of the read-only local web pages. Passwords and OpenAPI keys are redacted.
 
 ---
 

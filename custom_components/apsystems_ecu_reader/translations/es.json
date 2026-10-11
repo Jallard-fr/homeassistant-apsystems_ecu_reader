@@ -12,7 +12,8 @@
           "wifi_password": "Especificar contraseña (solo para modelos ECU-R-Pro y ECU-C)",
           "cloud_app_id": "App Id de la OpenAPI de APsystems (opcional, energía del medidor desde la nube)",
           "cloud_app_secret": "App Secret de la OpenAPI de APsystems (opcional)",
-          "cloud_sid": "ID del sistema EMA - SID (opcional)"
+          "cloud_sid": "ID del sistema EMA - SID (opcional, visible en la app APsystems en Account Details > Personal Info tras activar OpenAPI)",
+          "cloud_interval": "Intervalo de consulta de la OpenAPI en minutos (60 = ~744 llamadas/mes, cuota habitual de 1000)"
         },
         "title": "Configuración de ECU de APsystems"
       }
@@ -21,7 +22,7 @@
       "no_ecu_found": "No se encontró ECU en esta dirección IP o la ECU se está recuperando de un reinicio",
       "unknown": "Error desconocido, consulte el registro para detalles.",
       "cloud_incomplete": "Complete App Id, App Secret e ID del sistema para usar la OpenAPI de APsystems",
-      "cloud_connection_failed": "No se puede acceder a la OpenAPI de APsystems o no se encontró ningún medidor, compruebe App Id, App Secret e ID del sistema"
+      "cloud_connection_failed": "No se puede acceder a la OpenAPI de APsystems o no se encontró ningún medidor: {error}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -40,7 +41,8 @@
           "wifi_password": "Especificar contraseña (solo para modelos ECU-R-Pro y ECU-C)",
           "cloud_app_id": "App Id de la OpenAPI de APsystems (opcional, energía del medidor desde la nube)",
           "cloud_app_secret": "App Secret de la OpenAPI de APsystems (opcional)",
-          "cloud_sid": "ID del sistema EMA - SID (opcional)"
+          "cloud_sid": "ID del sistema EMA - SID (opcional, visible en la app APsystems en Account Details > Personal Info tras activar OpenAPI)",
+          "cloud_interval": "Intervalo de consulta de la OpenAPI en minutos (60 = ~744 llamadas/mes, cuota habitual de 1000)"
         },
         "title": "Configuración de ECU de APsystems"
       }
@@ -49,7 +51,7 @@
       "no_ecu_found": "No se encontró ECU en esta dirección IP o la ECU se está recuperando de un reinicio",
       "unknown": "Error desconocido, consulte el registro para detalles",
       "cloud_incomplete": "Complete App Id, App Secret e ID del sistema para usar la OpenAPI de APsystems",
-      "cloud_connection_failed": "No se puede acceder a la OpenAPI de APsystems o no se encontró ningún medidor, compruebe App Id, App Secret e ID del sistema"
+      "cloud_connection_failed": "No se puede acceder a la OpenAPI de APsystems o no se encontró ningún medidor: {error}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
