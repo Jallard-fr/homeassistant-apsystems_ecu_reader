@@ -285,7 +285,7 @@ async def async_setup_entry(hass, config):
         identifiers={(DOMAIN, f"ecu_{ecu.ecu.ecu_id}")},
         manufacturer="APsystems",
         suggested_area="Roof",
-        name=f"ECU {ecu.ecu.ecu_id}",
+        name=f"JBA ECU {ecu.ecu.ecu_id}",
         model=ECU_MODEL_MAP.get(ecu.ecu.ecu_id[:4], "Unknown Model"),
         sw_version=ecu.ecu.firmware,
     )
@@ -298,7 +298,7 @@ async def async_setup_entry(hass, config):
             identifiers={(DOMAIN, f"inverter_{uid}")},
             manufacturer="APsystems",
             suggested_area="Roof",
-            name=f"Inverter {uid}",
+            name=f"JBA Inverter {uid}",
             model=inv_data.get("model"),
             via_device_id=ecu_device.id,
         )

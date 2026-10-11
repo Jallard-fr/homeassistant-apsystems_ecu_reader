@@ -17,6 +17,22 @@
 
 ![alt text](https://github.com/HAEdwin/homeassistant-apsystems_ecu_reader/blob/main/APsystems_ECU_Reader.PNG?raw=true)
 
+## Version de test « JBA » (ce fork)
+
+Ce fork installe une intégration séparée, **APsystems ECU Reader JBA** (domaine `apsystems_ecu_reader_jba`). Elle tourne **à côté** de l'intégration d'origine sans la modifier. Ses appareils et entités commencent par « JBA ».
+
+**Installation avec HACS**
+1. HACS → ⋮ (en haut à droite) → **Dépôts personnalisés** → URL `https://github.com/Jallard-fr/homeassistant-apsystems_ecu_reader`, catégorie **Intégration** → Ajouter.
+2. Ouvrez « APsystems ECU Reader JBA » dans HACS → **Télécharger**.
+3. Redémarrez Home Assistant.
+4. Paramètres → Appareils et services → **Ajouter une intégration** → « APsystems ECU Reader JBA ». Saisissez l'IP de l'ECU et, si vous voulez les données du compteur depuis le cloud, l'App Id, l'App Secret et le SID de l'OpenAPI.
+
+**Mise à jour après une modification du dépôt**: HACS → APsystems ECU Reader JBA → ⋮ → **Retélécharger**, puis redémarrez Home Assistant.
+
+**Obtenir le JSON détaillé (diagnostics)**: Paramètres → Appareils et services → APsystems ECU Reader JBA → ⋮ → **Télécharger les diagnostics**. Le fichier est téléchargé sur votre ordinateur. Comptez environ 20 secondes, le temps d'interroger l'ECU. Les mots de passe et les clés OpenAPI y sont masqués.
+
+**Logs détaillés (facultatif)**: sur la même page, ⋮ → **Activer la journalisation de débogage**. Attendez un ou deux cycles d'interrogation, puis **Désactiver** : le journal se télécharge.
+
 ## Overview
 
 APsystems ECU Reader is a custom Home Assistant integration project for communicating with APsystems ECU hubs.

@@ -81,7 +81,7 @@ class FlowHandler(config_entries.ConfigFlow):
                 self._abort_if_unique_id_configured()
                 # Use the ECU-ID in the title to ensure uniqueness
                 return self.async_create_entry(
-                    title=f"APsystems ECU {ecu_id}", data=user_input
+                    title=f"APsystems ECU {ecu_id} JBA", data=user_input
                 )
             else:
                 errors["ecu_host"] = "no_ecu_found"
@@ -125,7 +125,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.entry, data={**self.entry.data, **user_input}
                 )
-                return self.async_create_entry(title="APsystems", data={})
+                return self.async_create_entry(title="APsystems JBA", data={})
             else:
                 errors["ecu_host"] = "no_ecu_found"
 

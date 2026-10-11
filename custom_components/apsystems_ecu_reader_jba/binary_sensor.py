@@ -39,7 +39,7 @@ class APsystemsECUBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._field = field
         self._label = label or field
         self._icon = icon
-        self._name = f"ECU {self._label}"
+        self._name = f"JBA ECU {self._label}"
         self._state = None
 
     @property

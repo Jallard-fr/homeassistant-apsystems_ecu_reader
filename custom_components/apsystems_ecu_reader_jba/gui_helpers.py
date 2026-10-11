@@ -205,5 +205,5 @@ def pers_gui_notification(hass, message):
     """Create a persistent notification for things that really needs user attention."""
     timestamp = datetime.now().strftime("%b %d %H:%M")
     persistent_notification_create(
-        hass, f"Message @ {timestamp}: {message}", title="APsystems ECU Reader"
+        hass, f"Message @ {timestamp}: {message}", title="APsystems ECU Reader JBA"
     )

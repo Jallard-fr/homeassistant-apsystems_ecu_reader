@@ -32,7 +32,7 @@ class RebootECUButton(ButtonEntity):
         """Initialize the button."""
         self._ecu = ecu
         self._attr_icon = ECU_REBOOT_ICON
-        self._attr_name = f"ECU {ecu.ecu.ecu_id} Reboot"
+        self._attr_name = f"JBA ECU {ecu.ecu.ecu_id} Reboot"
         self._attr_unique_id = f"ECU_{ecu.ecu.ecu_id}_reboot_button"
         self._attr_device_class = ButtonDeviceClass.RESTART
 
@@ -43,7 +43,7 @@ class RebootECUButton(ButtonEntity):
             "identifiers": {
                 (DOMAIN, f"ecu_{self._ecu.ecu.ecu_id}"),
             },
-            "name": f"ECU {self._ecu.ecu.ecu_id}",
+            "name": f"JBA ECU {self._ecu.ecu.ecu_id}",
             "manufacturer": "APsystems",
             "model": ECU_MODEL_MAP.get(self._ecu.ecu.ecu_id[:4], "Unknown Model"),
             "sw_version": self._ecu.ecu.firmware,
