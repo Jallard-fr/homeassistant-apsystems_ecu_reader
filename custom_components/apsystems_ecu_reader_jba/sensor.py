@@ -130,6 +130,26 @@ async def async_setup_entry(hass, config_entry, add_entities):
         ),
     ]
 
+    # Production of the current week, month and year (when the ECU reports it)
+    for field, label in (
+        ("week_energy", "Week Energy"),
+        ("month_energy", "Month Energy"),
+        ("year_energy", "Year Energy"),
+    ):
+        if field in coordinator.data:
+            sensors.append(
+                APsystemsECUSensor(
+                    coordinator,
+                    ecu,
+                    field,
+                    label=f"{ecu.ecu.ecu_id} {label}",
+                    unit=UnitOfEnergy.KILO_WATT_HOUR,
+                    devclass=SensorDeviceClass.ENERGY,
+                    icon=SOLAR_ICON,
+                    stateclass=SensorStateClass.TOTAL_INCREASING,
+                )
+            )
+
     # Add CT sensors for ECU-C only
     if ecu.ecu.ecu_id.startswith("215"):
         # Add production CT sensors
